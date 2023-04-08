@@ -1,72 +1,65 @@
-const saveCommandButton = document.getElementById("save-command-button");
-const commandTextarea = document.getElementById("command-textarea");
-const commandList = document.getElementById("command-list");
+import { useState, useEffect } from "react";
 
-function saveCommand() {
-  // Get command from textarea
-  const command = commandTextarea.value.trim();
-  if (!command) {
-    return;
-  }
+export default function Popup() {
+  const [commands, setCommands] = useState([]);
+  const [inputCommand, setInputCommand] = useState("");
 
-  // Add command to list
-  const commandItem = document.createElement("li");
-  const commandText = document.createTextNode(command);
-  const deleteButton = document.createElement("button");
-  deleteButton.innerHTML = "Delete";
-  deleteButton.onclick = function() {
-    commandList.removeChild(commandItem);
-    chrome.storage.sync.get("commands", function(result) {
-      const commands = result.commands || [];
-      const index = commands.indexOf(command);
-      if (index !== -1) {
-        commands.splice(index, 1);
-        chrome.storage.sync.set({commands: commands});
+  useEffect(() => {
+    // Load commands from storage when component mounts
+    chrome.storage.sync.get("commands", (result) => {
+      if (result.commands) {
+        setCommands(result.commands);
       }
     });
+  }, []);
+
+  const handleSaveCommand = () => {
+    // Add command to the list of commands
+    setCommands((prevCommands) => [...prevCommands, inputCommand]);
+
+    // Save updated list of commands to storage
+    chrome.storage.sync.set({ commands: [...commands, inputCommand] });
+
+    // Clear input field
+    setInputCommand("");
   };
-  commandItem.appendChild(commandText);
-  commandItem.appendChild(deleteButton);
-  commandList.appendChild(commandItem);
 
-  // Save command to storage
-  chrome.storage.sync.get("commands", function(result) {
-    const commands = result.commands || [];
-    commands.push(command);
-    chrome.storage.sync.set({commands: commands});
-  });
+  const handleDeleteCommand = (index) => {
+    // Remove command from list of commands
+    const updatedCommands = commands.filter((_, i) => i !== index);
+    setCommands(updatedCommands);
 
-  // Clear textarea
-  commandTextarea.value = "";
+    // Save updated list of commands to storage
+    chrome.storage.sync.set({ commands: updatedCommands });
+  };
+
+  const handleInputChange = (event) => {
+    setInputCommand(event.target.value);
+  };
+
+  return (
+    <div>
+      <h2>ChatGPT Command Saver</h2>
+      <textarea value={inputCommand} onChange={handleInputChange}></textarea>
+      <button id="save-btn">Save Command</button>
+      <ul>
+        {commands.map((command, index) => (
+          <li key={index}>
+            {command}
+            <button onClick={() => handleDeleteCommand(index)}>Delete</button>
+            <button onClick={() => console.log(command)}>Copy</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  // Add event listener to save button
+  useEffect(() => {
+    const saveButton = document.getElementById("save-btn");
+    saveButton.addEventListener("click", handleSaveCommand);
+
+    // Clean up event listener on unmount
+    return () => saveButton.removeEventListener("click", handleSaveCommand);
+  }, [commands]);
 }
-
-function loadCommands() {
-  chrome.storage.sync.get("commands", function(result) {
-    const commands = result.commands || [];
-    for (let i = 0; i < commands.length; i++) {
-      const commandItem = document.createElement("li");
-      const commandText = document.createTextNode(commands[i]);
-      const deleteButton = document.createElement("button");
-      deleteButton.innerHTML = "Delete";
-      deleteButton.onclick = function() {
-        commandList.removeChild(commandItem);
-        chrome.storage.sync.get("commands", function(result) {
-          const commands = result.commands || [];
-          const index = commands.indexOf(commands[i]);
-          if (index !== -1) {
-            commands.splice(index, 1);
-            chrome.storage.sync.set({commands: commands});
-          }
-        });
-      };
-      commandItem.appendChild(commandText);
-      commandItem.appendChild(deleteButton);
-      commandList.appendChild(commandItem);
-    }
-  });
-}
-
-// Load commands from storage when popup opens
-loadCommands();
-
-// Save command to storage and add it to the list when "Save Command"

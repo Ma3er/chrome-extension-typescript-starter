@@ -1,13 +1,25 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <title>Getting Started Extension's Popup</title>
-    <script src="js/vendor.js"></script>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/popup.css" />
+    <title>ChatGPT Command Saver</title>
   </head>
   <body>
-    <div id="root"></div>
-    <script src="js/popup.js"></script>
+    <div class="container">
+      <h1>ChatGPT Command Saver</h1>
+      <form>
+        <label for="command-name">Command Name:</label>
+        <input type="text" id="command-name" required />
+        <label for="command-code">Command Code:</label>
+        <textarea id="command-code" required></textarea>
+        <button type="submit" id="save-button">Save Command</button>
+      </form>
+      <ul id="commands-list"></ul>
+    </div>
+
+    <script src="/js/popup.js"></script>
   </body>
 </html>
-
